@@ -5,7 +5,6 @@ export function setupCounter(element: HTMLButtonElement) {
     element.innerHTML = `count is ${counter}`
   }
   console.log('Ca marche')
-
   element.addEventListener('click', () => setCounter(counter + 1))
   setCounter(0)
 }
