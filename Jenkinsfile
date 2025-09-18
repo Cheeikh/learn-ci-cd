@@ -3,7 +3,6 @@ pipeline {
 
     tools {
         nodejs "NodeJS"
-        dockerTool "Docker"
     }
 
     stages {
@@ -39,13 +38,19 @@ pipeline {
                     // Vérifier que Docker est disponible
                     sh 'docker --version'
                     
-                    // Construire l'image Docker
-                    def image = docker.build("${env.JOB_NAME}:${env.BUILD_NUMBER}")
+                    // Login Docker Hub avec credentials
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    }
                     
-                    // Push vers Docker Hub avec credentials
-                    docker.withRegistry('', 'dockerhub-credentials') {
-                        image.push()
-                        image.push('latest')
+                    // Construire l'image Docker
+                    sh "docker build -t ${env.JOB_NAME}:${env.BUILD_NUMBER} ."
+                    sh "docker tag ${env.JOB_NAME}:${env.BUILD_NUMBER} ${env.JOB_NAME}:latest"
+                    
+                    // Push vers Docker Hub
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "docker push ${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                        sh "docker push ${env.JOB_NAME}:latest"
                     }
                     
                     echo "✅ Image Docker construite et poussée avec succès"
