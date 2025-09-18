@@ -9,7 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main', 
-                     url: 'https://github.com/cheikhmbacke/learn-ci-cd.git',
+                     url: 'https://github.com/Cheeikh/learn-ci-cd.git',
                      credentialsId: 'github-credentials'
             }
         }
