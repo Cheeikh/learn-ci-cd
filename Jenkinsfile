@@ -4,7 +4,12 @@ pipeline {
     // Tools
     tools {
         nodejs "NodeJS"
-        dockerTool "Docker"
+    }
+    
+    environment {
+        // Utiliser Docker Desktop du système
+        PATH = "/Applications/Docker.app/Contents/Resources/bin:${env.PATH}"
+        DOCKER_BUILDKIT = "1"
     }
 
     // Stages
@@ -38,8 +43,28 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    // Vérifier que Docker est disponible
-                    sh 'docker --version'
+                    // Vérifier que Docker Desktop est disponible et fonctionnel
+                    sh '''
+                        echo "=== Vérification Docker Desktop ==="
+                        
+                        # Vérifier que Docker Desktop est installé
+                        if [ ! -f "/Applications/Docker.app/Contents/Resources/bin/docker" ]; then
+                            echo "❌ Docker Desktop non trouvé"
+                            echo "Veuillez installer Docker Desktop depuis https://docker.com"
+                            exit 1
+                        fi
+                        
+                        # Vérifier que Docker Desktop est démarré
+                        if ! docker ps >/dev/null 2>&1; then
+                            echo "❌ Docker Desktop n'est pas démarré"
+                            echo "Veuillez démarrer Docker Desktop et réessayer"
+                            exit 1
+                        fi
+                        
+                        # Afficher la version
+                        docker --version
+                        echo "✅ Docker Desktop fonctionnel"
+                    '''
                     
                     // Login Docker Hub avec credentials
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
