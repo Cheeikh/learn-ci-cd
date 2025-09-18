@@ -60,7 +60,10 @@ Version: NodeJS 20.x (ou plus récent)
 Name: Docker
 Install automatically: ✅
 Version: Latest stable
+Installation directory: /usr/local/bin (ou laisser par défaut)
 ```
+
+**Note** : L'outil Docker dans Jenkins permet d'utiliser Docker sans installation manuelle.
 
 ## 🔐 Configuration des Credentials
 
@@ -125,6 +128,7 @@ pipeline {
     
     tools {
         nodejs "NodeJS"         // Utilise l'outil NodeJS configuré
+        docker "Docker"         // Utilise l'outil Docker configuré
     }
     
     stages {
