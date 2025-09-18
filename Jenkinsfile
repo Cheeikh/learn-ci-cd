@@ -81,27 +81,33 @@ pipeline {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                     }
                     
-                    // Construire l'image Docker
-                    sh "docker build -t ${env.JOB_NAME}:${env.BUILD_NUMBER} ."
-                    sh "docker tag ${env.JOB_NAME}:${env.BUILD_NUMBER} ${env.JOB_NAME}:latest"
-                    
-                    // Push vers Docker Hub
+                    // Construire l'image Docker avec le nom d'utilisateur Docker Hub
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh "docker push ${env.JOB_NAME}:${env.BUILD_NUMBER}"
-                        sh "docker push ${env.JOB_NAME}:latest"
+                        sh "docker build -t ${env.DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER} ."
+                        sh "docker tag ${env.DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER} ${env.DOCKER_USERNAME}/${env.JOB_NAME}:latest"
+                        
+                        // Push vers Docker Hub
+                        sh "docker push ${env.DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                        sh "docker push ${env.DOCKER_USERNAME}/${env.JOB_NAME}:latest"
                     }
                     
                     echo "✅ Image Docker construite et poussée avec succès"
-                    echo "Image: ${env.JOB_NAME}:${env.BUILD_NUMBER}"
-                    echo "Tag latest: ${env.JOB_NAME}:latest"
+                    echo "Image: ${env.DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                    echo "Tag latest: ${env.DOCKER_USERNAME}/${env.JOB_NAME}:latest"
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                echo '🚀 Déploiement terminé - Image Docker disponible'
-                echo "Image: ${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        echo '🚀 Déploiement terminé - Image Docker disponible'
+                        echo "Image: ${env.DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                        echo "Tag latest: ${env.DOCKER_USERNAME}/${env.JOB_NAME}:latest"
+                        echo "Repository: https://hub.docker.com/r/${env.DOCKER_USERNAME}/${env.JOB_NAME}"
+                    }
+                }
             }
         }
     }
