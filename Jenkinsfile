@@ -4,6 +4,13 @@ pipeline {
     // Tools
     tools {
         nodejs "NodeJS"
+        dockerTool "Docker"
+    }
+    
+    environment {
+        // Utiliser Docker Desktop du système
+        PATH = "/Applications/Docker.app/Contents/Resources/bin:${env.PATH}"
+        DOCKER_BUILDKIT = "1"
     }
     
     environment {
