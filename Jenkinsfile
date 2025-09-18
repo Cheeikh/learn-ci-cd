@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS"  
+        nodejs "NodeJS",
+        docker "Docker"
     }
 
     stages {
@@ -35,11 +36,21 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
+                    // Vérifier que Docker est disponible
+                    sh 'docker --version'
+                    
+                    // Construire l'image Docker
                     def image = docker.build("${env.JOB_NAME}:${env.BUILD_NUMBER}")
+                    
+                    // Push vers Docker Hub avec credentials
                     docker.withRegistry('', 'dockerhub-credentials') {
                         image.push()
                         image.push('latest')
                     }
+                    
+                    echo "✅ Image Docker construite et poussée avec succès"
+                    echo "Image: ${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                    echo "Tag latest: ${env.JOB_NAME}:latest"
                 }
             }
         }
