@@ -7,8 +7,8 @@ pipeline {
     }
     
     environment {
-        // Utiliser Docker Desktop du système
-        PATH = "/Applications/Docker.app/Contents/Resources/bin:${env.PATH}"
+        // Utiliser Docker du système (symlink vers Docker Desktop)
+        PATH = "/usr/local/bin:${env.PATH}"
         DOCKER_BUILDKIT = "1"
     }
 
@@ -43,27 +43,30 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    // Vérifier que Docker Desktop est disponible et fonctionnel
+                    // Vérifier que Docker est disponible et fonctionnel
                     sh '''
-                        echo "=== Vérification Docker Desktop ==="
+                        echo "=== Vérification Docker ==="
+                        echo "PATH: $PATH"
+                        echo "Docker location: $(which docker)"
                         
-                        # Vérifier que Docker Desktop est installé
-                        if [ ! -f "/Applications/Docker.app/Contents/Resources/bin/docker" ]; then
-                            echo "❌ Docker Desktop non trouvé"
+                        # Vérifier que Docker est accessible
+                        if ! command -v docker >/dev/null 2>&1; then
+                            echo "❌ Docker non trouvé dans PATH"
                             echo "Veuillez installer Docker Desktop depuis https://docker.com"
                             exit 1
                         fi
                         
-                        # Vérifier que Docker Desktop est démarré
-                        if ! docker ps >/dev/null 2>&1; then
-                            echo "❌ Docker Desktop n'est pas démarré"
+                        # Afficher la version Docker
+                        docker --version
+                        
+                        # Vérifier que Docker daemon est accessible
+                        if ! docker info >/dev/null 2>&1; then
+                            echo "❌ Docker daemon non accessible"
                             echo "Veuillez démarrer Docker Desktop et réessayer"
                             exit 1
                         fi
                         
-                        # Afficher la version
-                        docker --version
-                        echo "✅ Docker Desktop fonctionnel"
+                        echo "✅ Docker fonctionnel"
                     '''
                     
                     // Login Docker Hub avec credentials
